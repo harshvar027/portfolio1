@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense } from "react"
 import dynamic from "next/dynamic"
 import CyberNav from "@/components/cyber-nav"
 import ScrollIndicator from "@/components/scroll-indicator"
+import { sectionNav } from "@/lib/portfolio-content"
 
 // Dynamic import for the 3D scene to avoid SSR issues
 const CyberScene = dynamic(() => import("@/components/cyber-scene"), {
@@ -94,12 +95,13 @@ export default function Home() {
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const step = 1 / sectionNav.length
       if (e.key === "ArrowDown" || e.key === " ") {
         e.preventDefault()
-        setTargetProgress((prev) => Math.min(1, prev + 0.25))
+        setTargetProgress((prev) => Math.min(1, prev + step))
       } else if (e.key === "ArrowUp") {
         e.preventDefault()
-        setTargetProgress((prev) => Math.max(0, prev - 0.25))
+        setTargetProgress((prev) => Math.max(0, prev - step))
       }
     }
     
@@ -119,18 +121,24 @@ export default function Home() {
       
       {/* Section indicators */}
       <div className="fixed right-8 top-1/2 z-20 flex -translate-y-1/2 flex-col gap-3">
-        {[0, 0.25, 0.5, 0.75].map((progress, i) => (
-          <button
-            key={i}
-            onClick={() => handleNavigate(progress)}
-            className={`h-3 w-3 rounded-full border-2 transition-all duration-300 ${
-              scrollProgress >= progress && scrollProgress < progress + 0.25
-                ? "scale-125 border-primary bg-primary shadow-[0_0_10px_var(--primary)]"
-                : "border-foreground/30 bg-transparent hover:border-foreground/60"
-            }`}
-            aria-label={`Go to section ${i + 1}`}
-          />
-        ))}
+        {sectionNav.map((section, i) => {
+          const next = sectionNav[i + 1]?.progress ?? 1
+          const active =
+            scrollProgress >= section.progress &&
+            (i === sectionNav.length - 1 ? scrollProgress <= 1 : scrollProgress < next)
+          return (
+            <button
+              key={section.id}
+              onClick={() => handleNavigate(section.progress)}
+              className={`h-3 w-3 rounded-full border-2 transition-all duration-300 ${
+                active
+                  ? "scale-125 border-primary bg-primary shadow-[0_0_10px_var(--primary)]"
+                  : "border-foreground/30 bg-transparent hover:border-foreground/60"
+              }`}
+              aria-label={`Go to ${section.label}`}
+            />
+          )
+        })}
       </div>
       
       {/* Footer */}

@@ -1,11 +1,21 @@
 "use client"
 
-import { Canvas, useFrame, useThree } from "@react-three/fiber"
-import { Float, Text, Html, MeshTransmissionMaterial, useTexture, Stars } from "@react-three/drei"
+import { Canvas, useFrame, useThree, type RootState } from "@react-three/fiber"
+import { Float, Text, Html, Stars } from "@react-three/drei"
 import { EffectComposer, Bloom, ChromaticAberration } from "@react-three/postprocessing"
 import { BlendFunction } from "postprocessing"
-import { useRef, useMemo, useState, useEffect } from "react"
+import { useRef, useMemo, useState, useEffect, type MouseEvent } from "react"
 import * as THREE from "three"
+import {
+  about,
+  friends as friendsData,
+  hero,
+  hobbies,
+  projects as projectsData,
+  scrollStarts,
+  sceneZ,
+  techStack,
+} from "@/lib/portfolio-content"
 
 // Particle system for background
 function ParticleField({ count = 500, scrollProgress }: { count?: number; scrollProgress: number }) {
@@ -43,7 +53,7 @@ function ParticleField({ count = 500, scrollProgress }: { count?: number; scroll
     return [positions, colors]
   }, [count])
   
-  useFrame((state) => {
+  useFrame((state: RootState) => {
     if (mesh.current) {
       mesh.current.rotation.y = state.clock.elapsedTime * 0.02
       mesh.current.rotation.x = state.clock.elapsedTime * 0.01
@@ -78,7 +88,7 @@ function ParticleField({ count = 500, scrollProgress }: { count?: number; scroll
 function FloatingShapes({ mousePosition, scrollProgress }: { mousePosition: { x: number; y: number }; scrollProgress: number }) {
   const groupRef = useRef<THREE.Group>(null)
   
-  useFrame((state) => {
+  useFrame((state: RootState) => {
     if (groupRef.current) {
       groupRef.current.rotation.y = state.clock.elapsedTime * 0.1 + mousePosition.x * 0.3
       groupRef.current.rotation.x = mousePosition.y * 0.2
@@ -160,7 +170,7 @@ function FloatingShapes({ mousePosition, scrollProgress }: { mousePosition: { x:
 function GlowingRing({ position, color, scale = 1 }: { position: [number, number, number]; color: string; scale?: number }) {
   const meshRef = useRef<THREE.Mesh>(null)
   
-  useFrame((state) => {
+  useFrame((state: RootState) => {
     if (meshRef.current) {
       meshRef.current.rotation.x = state.clock.elapsedTime * 0.5
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.3
@@ -185,7 +195,7 @@ function HeroSection({ scrollProgress, visible, isMobile }: { scrollProgress: nu
   const groupRef = useRef<THREE.Group>(null)
   const opacity = visible ? Math.max(0, 1 - scrollProgress * 4) : 0
   
-  useFrame((state) => {
+  useFrame((state: RootState) => {
     if (groupRef.current) {
       groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.2
     }
@@ -207,7 +217,7 @@ function HeroSection({ scrollProgress, visible, isMobile }: { scrollProgress: nu
           anchorY="middle"
           material-toneMapped={false}
         >
-          Haarshu.exe
+          {hero.title}
           <meshStandardMaterial
             color="#00f5ff"
             emissive="#00f5ff"
@@ -224,7 +234,7 @@ function HeroSection({ scrollProgress, visible, isMobile }: { scrollProgress: nu
           anchorX="center"
           anchorY="middle"
         >
-          Currently Learning Developer
+          {hero.subtitle}
           <meshStandardMaterial
             color="#ffffff"
             emissive="#ffffff"
@@ -244,16 +254,21 @@ function HeroSection({ scrollProgress, visible, isMobile }: { scrollProgress: nu
 
 // About section
 function AboutSection({ scrollProgress, isMobile }: { scrollProgress: number; isMobile: boolean }) {
-  const sectionProgress = (scrollProgress - 0.2) * 4
+  const sectionProgress = (scrollProgress - scrollStarts.about) * 4
   const visible = sectionProgress > 0 && sectionProgress < 2
   const opacity = visible ? Math.min(1, sectionProgress) * Math.max(0, 2 - sectionProgress) : 0
   
   if (opacity <= 0) return null
   
   const titleSize = isMobile ? 0.4 : 0.6
+  const skillClass = [
+    "border-neon-cyan/50 bg-neon-cyan/10 text-neon-cyan",
+    "border-neon-magenta/50 bg-neon-magenta/10 text-neon-magenta",
+    "border-neon-blue/50 bg-neon-blue/10 text-neon-blue",
+  ]
   
   return (
-    <group position={[0, 0, -15]}>
+    <group position={[0, 0, sceneZ.about]}>
       <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.2}>
         <Text
           fontSize={titleSize}
@@ -280,29 +295,26 @@ function AboutSection({ scrollProgress, isMobile }: { scrollProgress: number; is
           style={{ opacity, width: 'min(500px, 85vw)' }}
         >
           <p className="text-sm leading-relaxed text-foreground/90 sm:text-lg">
-            I{"'"}m currently learning new stuff with coding — exploring different languages and technologies.
-            This site is one of the projects I built to push my limits and explore what{"'"}s possible.
-            Always building, always learning.
+            {about.bio}
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2 sm:mt-6 sm:gap-4">
-            <span className="rounded-full border border-neon-cyan/50 bg-neon-cyan/10 px-3 py-1 text-xs text-neon-cyan sm:px-4 sm:py-2 sm:text-sm">
-              React
-            </span>
-            <span className="rounded-full border border-neon-magenta/50 bg-neon-magenta/10 px-3 py-1 text-xs text-neon-magenta sm:px-4 sm:py-2 sm:text-sm">
-              Three.js
-            </span>
-            <span className="rounded-full border border-neon-blue/50 bg-neon-blue/10 px-3 py-1 text-xs text-neon-blue sm:px-4 sm:py-2 sm:text-sm">
-              WebGL
-            </span>
+            {about.skills.map((skill, i) => (
+              <span
+                key={skill}
+                className={`rounded-full border px-3 py-1 text-xs sm:px-4 sm:py-2 sm:text-sm ${skillClass[i % skillClass.length]}`}
+              >
+                {skill}
+              </span>
+            ))}
           </div>
           <div className="mt-4 sm:mt-6">
             <a
-              href="https://guns.lol/harshuu"
-              target="_blank"
-              rel="noopener noreferrer"
+              href={about.linkHref}
+              target={about.linkHref === "#" ? undefined : "_blank"}
+              rel={about.linkHref === "#" ? undefined : "noopener noreferrer"}
               className="inline-block rounded-full border border-neon-cyan bg-neon-cyan/10 px-6 py-2 text-sm text-neon-cyan transition-all hover:bg-neon-cyan/30 hover:shadow-[0_0_15px_#00f5ff]"
             >
-              About ↗
+              {about.linkLabel}
             </a>
           </div>
         </div>
@@ -354,7 +366,7 @@ function ProjectCard3D({
   const meshRef = useRef<THREE.Mesh>(null)
   const groupRef = useRef<THREE.Group>(null)
   
-  useFrame((state) => {
+  useFrame((state: RootState) => {
     if (meshRef.current) {
       meshRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.1
     }
@@ -418,7 +430,7 @@ function ProjectCard3D({
 
 // Projects section
 function ProjectsSection({ scrollProgress, isMobile }: { scrollProgress: number; isMobile: boolean }) {
-  const sectionProgress = (scrollProgress - 0.45) * 4
+  const sectionProgress = (scrollProgress - scrollStarts.projects) * 4
   const visible = sectionProgress > 0 && sectionProgress < 2
   const opacity = visible ? Math.min(1, sectionProgress) * Math.max(0, 2 - sectionProgress) : 0
   
@@ -426,14 +438,8 @@ function ProjectsSection({ scrollProgress, isMobile }: { scrollProgress: number;
   
   const titleSize = isMobile ? 0.4 : 0.6
   
-  const projects = [
-    { title: "AI Chat Bot", description: "Python chatbot using NLP & ML", color: "#00f5ff", position: [-4, 1, 0] as [number, number, number] },
-    { title: "Portfolio 3D", description: "This site — built with Three.js", color: "#ff00ff", position: [0, 1.5, 2] as [number, number, number] },
-    { title: "Snake AI", description: "Classic snake game with AI solver", color: "#5555ff", position: [4, 1, 0] as [number, number, number] },
-  ]
-  
   return (
-    <group position={[0, 0, -35]}>
+    <group position={[0, 0, sceneZ.projects]}>
       <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.2}>
         <Text
           fontSize={titleSize}
@@ -454,7 +460,7 @@ function ProjectsSection({ scrollProgress, isMobile }: { scrollProgress: number;
         </Text>
       </Float>
       
-      {projects.map((project, i) => (
+      {projectsData.map((project, i) => (
         <ProjectCard3D
           key={i}
           position={project.position}
@@ -470,7 +476,7 @@ function ProjectsSection({ scrollProgress, isMobile }: { scrollProgress: number;
 
 // Tech stack with orbiting icons
 function TechStackSection({ scrollProgress, isMobile }: { scrollProgress: number; isMobile: boolean }) {
-  const sectionProgress = (scrollProgress - 0.7) * 4
+  const sectionProgress = (scrollProgress - scrollStarts.tech) * 4
   const visible = sectionProgress > 0 && sectionProgress < 2
   const opacity = visible ? Math.min(1, sectionProgress) * Math.max(0, 2 - sectionProgress) : 0
   const groupRef = useRef<THREE.Group>(null)
@@ -478,16 +484,9 @@ function TechStackSection({ scrollProgress, isMobile }: { scrollProgress: number
   const titleSize = isMobile ? 0.4 : 0.6
   const labelSize = isMobile ? 0.15 : 0.25
   
-  const techs = [
-    { name: "Python", color: "#3776ab" },
-    { name: "JavaScript", color: "#f7df1e" },
-    { name: "React", color: "#61dafb" },
-    { name: "Three.js", color: "#00f5ff" },
-    { name: "HTML/CSS", color: "#e34f26" },
-    { name: "Git", color: "#ff00ff" },
-  ]
+  const techs = techStack
   
-  useFrame((state) => {
+  useFrame((state: RootState) => {
     if (groupRef.current) {
       groupRef.current.rotation.y = state.clock.elapsedTime * 0.2
     }
@@ -496,7 +495,7 @@ function TechStackSection({ scrollProgress, isMobile }: { scrollProgress: number
   if (opacity <= 0) return null
   
   return (
-    <group position={[0, 0, -55]}>
+    <group position={[0, 0, sceneZ.tech]}>
       <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.2}>
         <Text
           fontSize={titleSize}
@@ -564,13 +563,171 @@ function TechStackSection({ scrollProgress, isMobile }: { scrollProgress: number
   )
 }
 
+function HobbyShape3D({
+  shape,
+  color,
+  opacity,
+}: {
+  shape: (typeof hobbies)[number]["shape"]
+  color: string
+  opacity: number
+}) {
+  const matProps = {
+    color,
+    emissive: color,
+    emissiveIntensity: 0.5,
+    transparent: true,
+    opacity: opacity * 0.85,
+    wireframe: true as const,
+  }
+  if (shape === "box") {
+    return (
+      <mesh>
+        <boxGeometry args={[0.7, 0.7, 0.7]} />
+        <meshStandardMaterial {...matProps} />
+      </mesh>
+    )
+  }
+  if (shape === "sphere") {
+    return (
+      <mesh>
+        <sphereGeometry args={[0.45, 16, 16]} />
+        <meshStandardMaterial {...matProps} />
+      </mesh>
+    )
+  }
+  return (
+    <mesh rotation={[Math.PI / 4, 0, 0]}>
+      <torusGeometry args={[0.35, 0.12, 12, 24]} />
+      <meshStandardMaterial {...matProps} />
+    </mesh>
+  )
+}
+
+function FriendsSection({ scrollProgress, isMobile }: { scrollProgress: number; isMobile: boolean }) {
+  const sectionProgress = (scrollProgress - scrollStarts.friends) * 4
+  const visible = sectionProgress > 0 && sectionProgress < 2
+  const opacity = visible ? Math.min(1, sectionProgress) * Math.max(0, 2 - sectionProgress) : 0
+
+  if (opacity <= 0) return null
+
+  const titleSize = isMobile ? 0.4 : 0.6
+
+  return (
+    <group position={[0, 0, sceneZ.friends]}>
+      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.2}>
+        <Text
+          fontSize={titleSize}
+          position={[0, 4, 0]}
+          color="#00f5ff"
+          anchorX="center"
+          anchorY="middle"
+        >
+          Friends
+          <meshStandardMaterial
+            color="#00f5ff"
+            emissive="#00f5ff"
+            emissiveIntensity={0.8}
+            toneMapped={false}
+            transparent
+            opacity={opacity}
+          />
+        </Text>
+      </Float>
+
+      {friendsData.map((friend, i) => (
+        <ProjectCard3D
+          key={`${friend.title}-${i}`}
+          position={friend.position}
+          title={friend.title}
+          description={friend.description}
+          color={friend.color}
+          opacity={opacity}
+        />
+      ))}
+    </group>
+  )
+}
+
+function WhatILikeSection({ scrollProgress, isMobile }: { scrollProgress: number; isMobile: boolean }) {
+  const sectionProgress = (scrollProgress - scrollStarts.likes) * 4
+  const visible = sectionProgress > 0 && sectionProgress < 2
+  const opacity = visible ? Math.min(1, sectionProgress) * Math.max(0, 2 - sectionProgress) : 0
+
+  if (opacity <= 0) return null
+
+  const titleSize = isMobile ? 0.4 : 0.6
+  const labelSize = isMobile ? 0.12 : 0.18
+  const radius = isMobile ? 3.2 : 4.8
+  const n = hobbies.length
+
+  return (
+    <group position={[0, 0, sceneZ.likes]}>
+      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.2}>
+        <Text
+          fontSize={titleSize}
+          position={[0, 3.5, 0]}
+          color="#ff00ff"
+          anchorX="center"
+          anchorY="middle"
+        >
+          What I Like
+          <meshStandardMaterial
+            color="#ff00ff"
+            emissive="#ff00ff"
+            emissiveIntensity={0.8}
+            toneMapped={false}
+            transparent
+            opacity={opacity}
+          />
+        </Text>
+      </Float>
+
+      {hobbies.map((hobby, i) => {
+        const t = n <= 1 ? 0.5 : i / (n - 1)
+        const angle = t * Math.PI - Math.PI / 2
+        const x = Math.cos(angle) * radius * 0.95
+        const z = Math.sin(angle) * radius * 0.4
+        const y = Math.sin(i * 1.7) * 0.45
+        return (
+          <group key={hobby.label} position={[x, y, z]}>
+            <Float speed={1.4 + i * 0.12} rotationIntensity={0.35} floatIntensity={0.35}>
+              <group>
+                <HobbyShape3D shape={hobby.shape} color={hobby.color} opacity={opacity} />
+                <Text
+                  fontSize={labelSize}
+                  position={[0, -1.15, 0]}
+                  color={hobby.color}
+                  anchorX="center"
+                  anchorY="middle"
+                  maxWidth={isMobile ? 2.2 : 3}
+                >
+                  {hobby.label}
+                  <meshStandardMaterial
+                    color={hobby.color}
+                    emissive={hobby.color}
+                    emissiveIntensity={0.6}
+                    toneMapped={false}
+                    transparent
+                    opacity={opacity}
+                  />
+                </Text>
+              </group>
+            </Float>
+          </group>
+        )
+      })}
+    </group>
+  )
+}
+
 // Camera controller
 function CameraController({ scrollProgress, mousePosition }: { scrollProgress: number; mousePosition: { x: number; y: number } }) {
   const { camera } = useThree()
   
   useFrame(() => {
     // Move camera based on scroll
-    camera.position.z = 8 - scrollProgress * 60
+    camera.position.z = 8 - scrollProgress * 88
     
     // Slight camera movement based on mouse
     camera.position.x = mousePosition.x * 0.5
@@ -600,10 +757,16 @@ function Scene({ scrollProgress, mousePosition, isMobile }: { scrollProgress: nu
       <ParticleField count={800} scrollProgress={scrollProgress} />
       <FloatingShapes mousePosition={mousePosition} scrollProgress={scrollProgress} />
       
-      <HeroSection scrollProgress={scrollProgress} visible={scrollProgress < 0.3} isMobile={isMobile} />
+      <HeroSection
+        scrollProgress={scrollProgress}
+        visible={scrollProgress < scrollStarts.about + 0.12}
+        isMobile={isMobile}
+      />
       <AboutSection scrollProgress={scrollProgress} isMobile={isMobile} />
       <ProjectsSection scrollProgress={scrollProgress} isMobile={isMobile} />
       <TechStackSection scrollProgress={scrollProgress} isMobile={isMobile} />
+      <FriendsSection scrollProgress={scrollProgress} isMobile={isMobile} />
+      <WhatILikeSection scrollProgress={scrollProgress} isMobile={isMobile} />
       
       <EffectComposer>
         <Bloom
@@ -634,7 +797,7 @@ export default function CyberScene({ scrollProgress }: { scrollProgress: number 
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
   
-  const handleMouseMove = (e: React.MouseEvent) => {
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
     const x = (e.clientX / window.innerWidth) * 2 - 1
     const y = -(e.clientY / window.innerHeight) * 2 + 1
     setMousePosition({ x, y })

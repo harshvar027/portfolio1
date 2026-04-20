@@ -7,8 +7,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Haarshu.exe | Currently Learning Developer',
-  description: 'Portfolio of Haarshu — a class 12 student exploring coding, 3D web, and creative development.',
+  title: "[YOUR NAME].exe | [YOUR TAGLINE]",
+  description:
+    "[Short meta description — who you are and what you build. Edit in app/layout.tsx.]",
   icons: {
     icon: [
       {

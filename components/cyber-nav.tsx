@@ -1,13 +1,9 @@
 "use client"
 
 import { cn } from "@/lib/utils"
+import { navLogoLetter, sectionNav } from "@/lib/portfolio-content"
 
-const sections = [
-  { id: "intro", label: "Home", progress: 0 },
-  { id: "about", label: "About", progress: 0.25 },
-  { id: "projects", label: "Projects", progress: 0.5 },
-  { id: "tech", label: "Tech", progress: 0.75 },
-]
+const sections = [...sectionNav]
 
 export default function CyberNav({ 
   scrollProgress, 
@@ -32,7 +28,7 @@ export default function CyberNav({
       {/* Logo */}
       <div className="font-mono text-lg font-bold tracking-wider text-primary">
         <span className="text-neon-cyan">{"<"}</span>
-        H
+        {navLogoLetter}
         <span className="text-neon-magenta">/</span>
         <span className="text-neon-cyan">{">"}</span>
       </div>
